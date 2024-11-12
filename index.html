@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Playground Interativo</title>
+    <script src="menus.js"></script>
+    <script src="qa.js"></script>
+    <script src="ia.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 1rem;
+            color: white;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+            padding: 1rem;
+            gap: 1rem;
+        }
+        
+        .painel-principal {
+            flex: 2;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+        
+        .container-alternavel {
+            position: relative;
+            height: calc(100vh - 200px);
+        }
+        
+        .visualizacao,
+        .editor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.3s ease;
+        }
+        
+        .visualizacao {
+            border: 2px dashed #764ba2;
+            border-radius: 8px;
+            padding: 1rem;
+            background: white;
+        }
+        
+        .editor textarea {
+            width: 100%;
+            height: 100%;
+            padding: 1rem;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            resize: none;
+            background: #1e1e1e;
+            color: #fff;
+        }
+        
+        .toggle-view {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .toggle-view svg {
+            width: 24px;
+            height: 24px;
+            fill: #764ba2;
+        }
+        
+        .menu-elementos {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 1rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 100px);
+        }
+        
+        .categoria {
+            margin-bottom: 1rem;
+        }
+        
+        .categoria-titulo {
+            font-size: 1.1rem;
+            color: #764ba2;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.3rem;
+            border-bottom: 2px solid #764ba2;
+        }
+        
+        .subcategoria {
+            margin-left: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .menu-elementos ul {
+            list-style: none;
+        }
+        
+        .menu-elementos li {
+            padding: 0.6rem;
+            margin: 0.3rem 0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+        
+        .menu-elementos li:hover {
+            background: #764ba2;
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* Novo estilo para os controles */
+        
+        .controles {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-controle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-controle:hover {
+            background: rgba(118, 75, 162, 0.1);
+        }
+        
+        .btn-controle svg {
+            width: 20px;
+            height: 20px;
+            fill: #764ba2;
+        }
+        /* Estilos para modo dividido */
+        
+        .container-alternavel.modo-dividido {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .container-alternavel.modo-dividido .visualizacao,
+        .container-alternavel.modo-dividido .editor {
+            position: relative;
+            height: 100%;
+        }
+        
+        .container-alternavel.modo-dividido .editor textarea {
+            height: 100%;
+        }
+        /* Melhorias visuais */
+        
+        .visualizacao {
+            background: white;
+            box-shadow: inset 0 0 0 2px #764ba2;
+            border: none;
+        }
+        
+        .editor textarea {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        /* Separador vertical para modo dividido */
+        
+        .container-alternavel.modo-dividido::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: rgba(118, 75, 162, 0.2);
+            transform: translateX(-50%);
+        }
+        
+        .explicacao-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .explicacao-container.mostrar {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .explicacao-card {
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .explicacao-container.mostrar .explicacao-card {
+            transform: translateY(0);
+        }
+        
+        .btn-fechar {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-fechar:hover {
+            background-color: rgba(118, 75, 162, 0.1);
+        }
+        
+        .btn-fechar svg {
+            width: 24px;
+            height: 24px;
+            fill: #764ba2;
+        }
+        
+        .explicacao-conteudo {
+            padding-top: 1rem;
+        }
+        
+        .explicacao-conteudo h4 {
+            color: #764ba2;
+            margin: 1.5rem 0 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .explicacao-conteudo h4:first-child {
+            margin-top: 0;
+        }
+        
+        .explicacao-conteudo p {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .explicacao-conteudo ul {
+            list-style: disc;
+            margin-left: 1.5rem;
+            color: #4a5568;
+        }
+        
+        .explicacao-conteudo li {
+            margin: 0.5rem 0;
+        }
+        
+        .explicacao-conteudo code {
+            background: #f7f7f7;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #764ba2;
+            font-size: 0.9em;
+        }
+        
+        .pergunta-container {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .campo-pergunta {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .campo-pergunta input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .campo-pergunta button {
+            padding: 0.5rem 1rem;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .campo-pergunta button:hover {
+            background: #667eea;
+        }
+        
+        .resposta-pergunta {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f7f7f7;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #4a5568;
+            display: none;
+        }
+        
+        .resposta-pergunta.mostrar {
+            display: block;
+        }
+        
+        .sugestoes-perguntas {
+            margin: 1rem 0;
+        }
+        
+        .sugestao-pergunta {
+            padding: 0.5rem;
+            margin: 0.3rem 0;
+            background: #f7f7f7;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .sugestao-pergunta:hover {
+            background: #764ba2;
+            color: white;
+        }
+        
+        .botoes-sugestao {
+            display: none;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn-sugestao {
+            padding: 5px 15px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .btn-sugestao:hover {
+            background: #667eea;
+        }
+        
+        #perguntaInput:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>CSS Playground Interativo</h1>
+    </header>
+
+    <div class="container">
+        <div class="painel-principal">
+            <div class="container-alternavel">
+                <div class="controles">
+                    <button class="btn-controle" onclick="alternarVisao()" title="Alternar visualização/código">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-controle" onclick="alternarModo()" title="Alternar modo de visualização">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M16,12A2,2 0 0,1 18,10A2,2 0 0,1 20,12A2,2 0 0,1 18,14A2,2 0 0,1 16,12M10,12A2,2 0 0,1 12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12M4,12A2,2 0 0,1 6,10A2,2 0 0,1 8,12A2,2 0 0,1 6,14A2,2 0 0,1 4,12Z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-controle" onclick="mostrarExplicacao()" title="Mostrar explicação">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M13,3L16.3,6.3C16.7,6.7 16.7,7.3 16.3,7.7L13,11H21V3L17.7,6.3C17.3,6.7 16.7,6.7 16.3,6.3L13,3M3,13H11L7.7,16.3C7.3,16.7 7.3,17.3 7.7,17.7L11,21H3V13M13,21L16.3,17.7C16.7,17.3 17.3,17.3 17.7,17.7L21,21V13H13L16.3,16.3C16.7,16.7 16.7,17.3 16.3,17.7L13,21M3,3L6.3,6.3C6.7,6.7 6.7,7.3 6.3,7.7L3,11H11L7.7,7.7C7.3,7.3 7.3,6.7 7.7,6.3L11,3H3Z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="preview" class="visualizacao">
+                    <!-- Elemento será renderizado aqui -->
+                </div>
+                <div class="editor hidden">
+                    <textarea id="cssEditor" spellcheck="false">
+/* Edite o CSS aqui */
+.elemento-teste {
+    padding: 20px;
+    background: linear-gradient(45deg, #ff6b6b, #feca57);
+    border-radius: 8px;
+    color: white;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+                    </textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-elementos" id="menuContainer">
+            <!-- O menu será inicializado pelo JavaScript -->
+        </div>
+    </div>
+
+    <div class="explicacao-container">
+        <div class="explicacao-card">
+            <button class="btn-fechar" onclick="fecharExplicacao()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+            <div class="explicacao-conteudo">
+                <!-- O conteúdo será preenchido dinamicamente -->
+            </div>
+            <div class="pergunta-container">
+                <h4>Dúvidas sobre <span id="elementoAtual">este elemento</span>?</h4>
+                <div class="sugestoes-perguntas" id="sugestoesPerguntas">
+                    <!-- Perguntas sugeridas serão inseridas aqui -->
+                </div>
+                <div class="campo-pergunta">
+                    <input type="text" id="perguntaInput" placeholder="Digite sua pergunta aqui...">
+                    <button onclick="fazerPergunta()">Perguntar</button>
+                </div>
+                <div id="respostaPergunta" class="resposta-pergunta"></div>
+                <div id="botoesSugestao" class="botoes-sugestao" style="display: none;">
+                    <button onclick="responderSugestao(true)" class="btn-sugestao">Sim</button>
+                    <button onclick="responderSugestao(false)" class="btn-sugestao">Não</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.menuData) {
+                console.error('menuData não está disponível');
+                return;
+            }
+
+            // Inicialização do menu
+            document.getElementById('menuContainer').innerHTML = gerarMenuHTML();
+        });
+
+        function mostrarExplicacao() {
+            if (!window.menuData) {
+                console.error('menuData não está disponível');
+                return;
+            }
+
+            const container = document.querySelector('.explicacao-container');
+            const explicacaoConteudo = document.querySelector('.explicacao-conteudo');
+
+            // Encontra o tipo atual baseado no CSS do editor
+            const cssAtual = document.getElementById('cssEditor').value.trim();
+            let tipoAtual = null;
+            let subcategoriaEncontrada = null;
+
+            // Procura a subcategoria que corresponde exatamente ao exemplo atual
+            for (const categoria of Object.values(window.menuData)) {
+                if (typeof categoria === 'function' || !categoria.subcategorias) continue;
+
+                for (const [tipo, subcategoria] of Object.entries(categoria.subcategorias)) {
+                    if (subcategoria.exemplo && cssAtual === subcategoria.exemplo.trim()) {
+                        tipoAtual = tipo;
+                        subcategoriaEncontrada = subcategoria;
+                        break;
+                    }
+                }
+                if (tipoAtual) break;
+            }
+
+            // console.log(tipoAtual)
+            // console.log(subcategoriaEncontrada)
+
+            // Se não encontrou por exemplo exato, procura no histórico de seleção
+            if (!tipoAtual && window.ultimaSubcategoriaSelecionada) {
+                tipoAtual = window.ultimaSubcategoriaSelecionada;
+
+                // Procura a subcategoria pelo tipo
+                for (const categoria of Object.values(window.menuData)) {
+                    //console.log('oi')
+                    if (typeof categoria === 'function' || !categoria.subcategorias) continue;
+                    // console.log('ola')
+                    if (categoria.subcategorias[tipoAtual]) {
+                        // console.log(categoria.subcategorias[tipoAtual])
+                        subcategoriaEncontrada = categoria.subcategorias[tipoAtual];
+                        break;
+                    }
+                }
+            }
+
+            // Atualiza as perguntas se encontrou uma subcategoria
+            if (tipoAtual) {
+                window.atualizarPerguntasElemento(tipoAtual);
+            }
+
+            // Mostra a explicação apropriada
+            if (subcategoriaEncontrada && subcategoriaEncontrada.explanation) {
+                explicacaoConteudo.innerHTML = subcategoriaEncontrada.explanation;
+            } else {
+                explicacaoConteudo.innerHTML = '<p>Selecione um exemplo do menu para ver sua explicação.</p>';
+            }
+
+            container.classList.add('mostrar');
+        }
+
+        const elementoHTML = '<div class="elemento-teste">Teste seu CSS aqui!</div>';
+        document.getElementById('preview').innerHTML = elementoHTML;
+
+        let modoDividido = false;
+
+        function alternarModo() {
+            const container = document.querySelector('.container-alternavel');
+            const preview = document.querySelector('.visualizacao');
+            const editor = document.querySelector('.editor');
+
+            modoDividido = !modoDividido;
+
+            if (modoDividido) {
+                container.classList.add('modo-dividido');
+                preview.classList.remove('hidden');
+                editor.classList.remove('hidden');
+            } else {
+                container.classList.remove('modo-dividido');
+                // Volta para o modo anterior
+                if (preview.classList.contains('hidden')) {
+                    editor.classList.remove('hidden');
+                } else {
+                    preview.classList.remove('hidden');
+                    editor.classList.add('hidden');
+                }
+            }
+        }
+
+        function alternarVisao() {
+            if (modoDividido) return; // Não alterna se estiver em modo dividido
+
+            const preview = document.querySelector('.visualizacao');
+            const editor = document.querySelector('.editor');
+
+            preview.classList.toggle('hidden');
+            editor.classList.toggle('hidden');
+        }
+
+        function atualizarCSS() {
+            const styleElement = document.getElementById('estilosDinamicos') || document.createElement('style');
+            styleElement.id = 'estilosDinamicos';
+            styleElement.textContent = document.getElementById('cssEditor').value;
+
+            if (!document.getElementById('estilosDinamicos')) {
+                document.head.appendChild(styleElement);
+            }
+        }
+
+        // Atualizar CSS quando o texto mudar
+        document.getElementById('cssEditor').addEventListener('input', atualizarCSS);
+
+        function fecharExplicacao() {
+            const container = document.querySelector('.explicacao-container');
+            container.classList.remove('mostrar');
+        }
+
+        function encontrarExplicacao(css) {
+            if (!css) return '<p>Selecione um exemplo do menu para ver sua explicação.</p>';
+
+            // Procura a explicação correspondente no menuData
+            for (const categoria of Object.values(menuData)) {
+                if (typeof categoria === 'function' || !categoria.subcategorias) continue;
+
+                for (const subcategoria of Object.values(categoria.subcategorias)) {
+                    if (subcategoria.exemplo && css.trim() === subcategoria.exemplo.trim()) {
+                        return subcategoria.explanation || '<p>Explicação não disponível para este exemplo.</p>';
+                    }
+                }
+            }
+            return '<p>Selecione um exemplo do menu para ver sua explicação.</p>';
+        }
+
+        // Fechar ao clicar fora do card
+        document.querySelector('.explicacao-container').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharExplicacao();
+            }
+        });
+
+        // Fechar com a tecla ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharExplicacao();
+            }
+        });
+
+        let elementoAtualTipo = null;
+
+        function atualizarPerguntasElemento(tipo) {
+            elementoAtualTipo = tipo;
+            // console.log(tipo);
+            const perguntas = getPerguntasElemento(tipo);
+            const sugestoesContainer = document.getElementById('sugestoesPerguntas');
+            const elementoAtualSpan = document.getElementById('elementoAtual');
+
+            // Limpa o container de sugestões
+            sugestoesContainer.innerHTML = '';
+
+            // Encontra o nome do elemento
+            let nomeElemento = tipo;
+            for (const categoria of Object.values(menuData)) {
+                if (typeof categoria === 'function' || !categoria.subcategorias) continue;
+
+                if (categoria.subcategorias[tipo]) {
+                    nomeElemento = categoria.subcategorias[tipo].nome;
+                    break;
+                }
+            }
+
+            elementoAtualSpan.textContent = nomeElemento;
+
+            // Verifica se existem perguntas e as adiciona
+            if (perguntas && Object.keys(perguntas).length > 0) {
+                const perguntasHTML = Object.keys(perguntas)
+                    .map(pergunta => `
+                        <div class="sugestao-pergunta" onclick="selecionarPergunta('${pergunta.replace(/'/g, "\\'")}')">
+                            ${pergunta}
+                        </div>
+                    `).join('');
+                sugestoesContainer.innerHTML = perguntasHTML;
+            } else {
+                sugestoesContainer.innerHTML = '<p>Não há perguntas sugeridas para este elemento.</p>';
+            }
+        }
+
+        function selecionarPergunta(pergunta) {
+            document.getElementById('perguntaInput').value = pergunta;
+            fazerPergunta();
+        }
+
+        let perguntaOriginalSugerida = null;
+        let perguntaSugeridaAtual = null;
+
+        function mostrarResposta(texto) {
+            const respostaElement = document.getElementById('respostaPergunta');
+            const botoesSugestao = document.getElementById('botoesSugestao');
+            const perguntaInput = document.getElementById('perguntaInput');
+
+            respostaElement.textContent = texto;
+            respostaElement.classList.add('mostrar');
+            botoesSugestao.style.display = 'none';
+            perguntaInput.disabled = false;
+        }
+
+        function fazerPergunta() {
+            const perguntaInput = document.getElementById('perguntaInput');
+            const pergunta = perguntaInput.value;
+            if (!pergunta.trim() || !elementoAtualTipo) return;
+
+            const perguntasElemento = getPerguntasElemento(elementoAtualTipo);
+            if (!perguntasElemento) {
+                mostrarResposta("Desculpe, não tenho informações sobre este elemento.");
+                return;
+            }
+
+            const resultado = processarPerguntaContextual(pergunta, perguntasElemento);
+            processarResultado(resultado);
+        }
+
+        function processarResultado(resultado) {
+            const respostaElement = document.getElementById('respostaPergunta');
+            const botoesSugestao = document.getElementById('botoesSugestao');
+            const perguntaInput = document.getElementById('perguntaInput');
+
+            respostaElement.classList.add('mostrar');
+
+            switch (resultado.tipo) {
+                case 'resposta':
+                    respostaElement.textContent = resultado.texto;
+                    botoesSugestao.style.display = 'none';
+                    perguntaInput.disabled = false;
+                    break;
+                case 'sugestao':
+                    respostaElement.textContent = `Você quis dizer: "${resultado.perguntaSugerida}"?`;
+                    botoesSugestao.style.display = 'flex';
+                    perguntaInput.disabled = true;
+                    perguntaOriginalSugerida = resultado.perguntaOriginal;
+                    perguntaSugeridaAtual = resultado.perguntaSugerida;
+                    break;
+                case 'erro':
+                    respostaElement.textContent = resultado.texto;
+                    botoesSugestao.style.display = 'none';
+                    perguntaInput.disabled = false;
+                    break;
+            }
+        }
+
+        function responderSugestao(aceito) {
+            const perguntaInput = document.getElementById('perguntaInput');
+            const botoesSugestao = document.getElementById('botoesSugestao');
+
+            if (aceito) {
+                perguntaInput.value = perguntaSugeridaAtual;
+                fazerPergunta();
+            } else {
+                const respostaElement = document.getElementById('respostaPergunta');
+                respostaElement.textContent = "Por favor, reformule sua pergunta.";
+                botoesSugestao.style.display = 'none';
+            }
+
+            perguntaInput.disabled = false;
+            perguntaOriginalSugerida = null;
+            perguntaSugeridaAtual = null;
+        }
+
+        // Adicionar evento de tecla Enter
+        document.getElementById('perguntaInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !this.disabled) {
+                fazerPergunta();
+            }
+        });
+
+        // Torna a função disponível globalmente
+        window.atualizarPerguntasElemento = atualizarPerguntasElemento;
+    </script>
+</body>
+
+</html>
